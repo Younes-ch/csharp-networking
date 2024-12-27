@@ -29,7 +29,7 @@ internal class TcpChatServer
 
     // Messages that need to be sent
     private readonly Queue<string> _messageQueue = new();
-    
+
     // Types of clients connected
     private readonly List<TcpClient> _viewers = [];
     private readonly List<TcpClient> _messengers = [];
@@ -92,6 +92,7 @@ internal class TcpChatServer
         var good = false;
         var newClient = _listener.AcceptTcpClient(); // Blocks Thread
         var networkStream = newClient.GetStream();
+        networkStream.ReadTimeout = 1000;
 
         // Modify the default buffer sizes
         newClient.SendBufferSize = BufferSize;
@@ -103,52 +104,59 @@ internal class TcpChatServer
 
 
         var msgBuffer = new byte[BufferSize];
-        var bytesRead = networkStream.Read(msgBuffer);
-        Console.WriteLine($"Got {bytesRead} bytes.");
-
-        if (bytesRead > 0)
+        try
         {
-            var msg = Encoding.UTF8.GetString(msgBuffer, 0, bytesRead);
+            var bytesRead = networkStream.Read(msgBuffer);
+            Console.WriteLine($"Got {bytesRead} bytes.");
 
-            if (msg == "viewer")
+            if (bytesRead > 0)
             {
-                // They just want to watch
-                good = true;
-                _viewers.Add(newClient);
+                var msg = Encoding.UTF8.GetString(msgBuffer, 0, bytesRead);
 
-                Console.WriteLine($"{endPoint} is a Viewer.");
-
-                // Send them a hello message
-                msg = $"Welcome to the {_chatName} Chat Server!";
-
-                msgBuffer = Encoding.UTF8.GetBytes(msg);
-
-                networkStream.Write(msgBuffer);
-            }
-            else if (msg.StartsWith("name:"))
-            {
-                //  they might be a messenger
-                var name = msg[(msg.IndexOf(':') + 1)..];
-
-                if (!string.IsNullOrWhiteSpace(name) && !_names.ContainsValue(name))
+                if (msg == "viewer")
                 {
-                    // They're new here, let's add them
+                    // They just want to watch
                     good = true;
-                    _names.Add(newClient, name);
-                    _messengers.Add(newClient);
+                    _viewers.Add(newClient);
 
-                    Console.WriteLine($"{endPoint} is a Messenger with the name {name}");
+                    Console.WriteLine($"{endPoint} is a Viewer.");
 
-                    // Tell the viewers we have a new messenger
-                    _messageQueue.Enqueue($"{name} has joined the chat.");
+                    // Send them a hello message
+                    msg = $"Welcome to the {_chatName} Chat Server!";
+
+                    msgBuffer = Encoding.UTF8.GetBytes(msg);
+
+                    networkStream.Write(msgBuffer);
+                }
+                else if (msg.StartsWith("name:"))
+                {
+                    //  they might be a messenger
+                    var name = msg[(msg.IndexOf(':') + 1)..];
+
+                    if (!string.IsNullOrWhiteSpace(name) && !_names.ContainsValue(name))
+                    {
+                        // They're new here, let's add them
+                        good = true;
+                        _names.Add(newClient, name);
+                        _messengers.Add(newClient);
+
+                        Console.WriteLine($"{endPoint} is a Messenger with the name {name}");
+
+                        // Tell the viewers we have a new messenger
+                        _messageQueue.Enqueue($"{name} has joined the chat.");
+                    }
+                }
+                else
+                {
+                    // Wasn't either a viewer or messenger, clean up anyway.
+                    Console.WriteLine($"Wasn't able to identify {endPoint} as a Viewer or Messenger.");
+                    _cleanupClient(newClient);
                 }
             }
-            else
-            {
-                // Wasn't either a viewer or messenger, clean up anyway.
-                Console.WriteLine($"Wasn't able to identify {endPoint} as a Viewer or Messenger.");
-                _cleanupClient(newClient);
-            }
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Received nothing for the last second. Disconnecting the client: {endPoint}");
         }
 
         // Do we really want them?
