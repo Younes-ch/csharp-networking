@@ -48,7 +48,6 @@ internal class TcpChatServer
         _listener = new TcpListener(IPAddress.Any, _port);
     }
 
-
     public void Shutdown()
     {
         Running = false;
@@ -67,26 +66,27 @@ internal class TcpChatServer
         while (Running)
         {
             if (_listener.Pending())
-                HandleNewConnection();
+                _handleNewConnection();
 
-            CheckForDisconnects();
-            CheckForNewMessages();
-            SendMessages();
+            _checkForDisconnects();
+            _checkForNewMessages();
+            _sendMessages();
 
             Thread.Sleep(10);
         }
 
         // Stop the server, and clean up any connected clients
         foreach (var viewer in _viewers)
-            CleanupClient(viewer);
+            _cleanupClient(viewer);
 
         foreach (var messenger in _messengers)
-            CleanupClient(messenger);
+            _cleanupClient(messenger);
 
         _listener.Stop();
 
         Console.WriteLine("Server is shut down.");
     }
+            var msg = Encoding.UTF8.GetString(msgBuffer, 0, bytesRead);
 
     // Clears out the message queue and sends it to all viewers
     private void SendMessages()
@@ -112,7 +112,7 @@ internal class TcpChatServer
             if (messageLength > 0)
             {
                 var msgBuffer = new byte[messageLength];
-                messenger.GetStream().ReadExactly(msgBuffer);
+                var _ = messenger.GetStream().Read(msgBuffer, 0, messageLength);
 
                 var msg = $"{_names[messenger]}: {Encoding.UTF8.GetString(msgBuffer)}";
                 _messageQueue.Enqueue(msg);
