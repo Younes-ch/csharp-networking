@@ -50,9 +50,9 @@ internal class TcpChatMessenger
 
     public void Connect()
     {
-        Console.WriteLine("Attempting to connect...");
         
         // Try to connect
+        Console.WriteLine("Attempting to connect...");
         _client.Connect(_serverAddress, _port);
         var endPoint = _client.Client.RemoteEndPoint;
 
