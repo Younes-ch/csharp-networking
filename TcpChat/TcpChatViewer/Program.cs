@@ -128,7 +128,7 @@ internal class TcpChatViewer
         try
         {
             var socket = client.Client;
-            return socket.Poll(10 * 1000, SelectMode.SelectRead) && (socket.Available == 0);
+            return socket.Poll(10 * 1000, SelectMode.SelectRead) && socket.Available == 0;
         }
         catch
         {

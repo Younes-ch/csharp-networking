@@ -86,8 +86,8 @@ internal class TcpChatServer
 
         Console.WriteLine("Server is shut down.");
     }
-    
-     private void _handleNewConnection()
+
+    private void _handleNewConnection()
     {
         var good = false;
         var newClient = _listener.AcceptTcpClient(); // Blocks Thread

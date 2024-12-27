@@ -50,7 +50,6 @@ internal class TcpChatMessenger
 
     public void Connect()
     {
-        
         // Try to connect
         Console.WriteLine("Attempting to connect...");
         _client.Connect(_serverAddress, _port);
@@ -68,7 +67,9 @@ internal class TcpChatMessenger
 
             // If we're still connected after sending our name, that means the servers accepts us
             if (!IsDisconnected(_client))
+            {
                 Running = true;
+            }
             else
             {
                 // Name was probably taken
@@ -136,7 +137,7 @@ internal class TcpChatMessenger
         try
         {
             var socket = client.Client;
-            return socket.Poll(10 * 1000, SelectMode.SelectRead) && (socket.Available == 0);
+            return socket.Poll(10 * 1000, SelectMode.SelectRead) && socket.Available == 0;
         }
         catch
         {

@@ -7,10 +7,6 @@ listenTask.GetAwaiter().GetResult();
 
 internal class HttpServer
 {
-    private readonly HttpListener _listener = new();
-    private static int _pageViews;
-    private static int _requestCount;
-
     private const string PageData = """
                                         <!DOCTYPE>
                                         <html>
@@ -25,6 +21,10 @@ internal class HttpServer
                                             </body>
                                         </html>
                                     """;
+
+    private static int _pageViews;
+    private static int _requestCount;
+    private readonly HttpListener _listener = new();
 
     public HttpServer(string url)
     {
@@ -73,7 +73,7 @@ internal class HttpServer
 
             await response.OutputStream.WriteAsync(data);
             response.Close();
-            
+
             /*
              * With how the code is currently structured inside the loop, only one client can be handled at a time.
              * So if a second client tries to connect while the server is still talking to another user, it will have to
@@ -81,9 +81,9 @@ internal class HttpServer
              * A common pattern in server design is to create a new thread or fork the server process immediately after
              * a user has connected to it.
              * This way it can handle new incoming connections while serving that user.
-             * Uncomment the following line and then try viewing the page a few times. 
+             * Uncomment the following line and then try viewing the page a few times.
              */
-            
+
             // Thread.Sleep(TimeSpan.FromSeconds(10));
         }
     }
