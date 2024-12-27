@@ -66,20 +66,20 @@ internal class TcpChatMessenger
             _msgStream.Write(msgBuffer);
 
             // If we're still connected after sending our name, that means the servers accepts us
-            if (!IsDisconnected(_client))
+            if (!_isDisconnected(_client))
             {
                 Running = true;
             }
             else
             {
                 // Name was probably taken
-                CleanupNetworkResources();
+                _cleanupNetworkResources();
                 Console.WriteLine($"The server rejected us; \"{_name}\" is probably taken.");
             }
         }
         else
         {
-            CleanupNetworkResources();
+            _cleanupNetworkResources();
             Console.WriteLine($"Wasn't able to connect to the server at {endPoint}");
         }
     }
@@ -111,20 +111,20 @@ internal class TcpChatMessenger
             Thread.Sleep(10);
 
             // Check the server didn't disconnect us
-            if (IsDisconnected(_client))
+            if (_isDisconnected(_client))
             {
                 Running = false;
                 Console.WriteLine("Server has disconnected us.");
             }
         }
 
-        CleanupNetworkResources();
+        _cleanupNetworkResources();
         if (wasRunning)
             Console.WriteLine("Disconnected");
     }
 
     // Cleans any leftover network resources
-    private void CleanupNetworkResources()
+    private void _cleanupNetworkResources()
     {
         _msgStream?.Close();
         _msgStream = null;
@@ -132,7 +132,7 @@ internal class TcpChatMessenger
     }
 
     // Checks if a socket has disconnected
-    private static bool IsDisconnected(TcpClient client)
+    private static bool _isDisconnected(TcpClient client)
     {
         try
         {
